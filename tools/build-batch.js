@@ -2,6 +2,7 @@
 // 使い方: node tools/build-batch.js <batch名> [開始question_no]
 //   例:   node tools/build-batch.js batch-001 1
 //         node tools/build-batch.js all          … input/ の全バッチを連番で変換し seed-all.sql も出力
+//         node tools/build-batch.js all --from batch-013 … 上記に加え、batch-013 以降だけをまとめた seed-from-batch-013.sql も出力(追加投入用)
 //
 // 入力: tools/input/<batch名>.json
 //   [{ "f":"france", "d":2, "r":true,
@@ -98,12 +99,22 @@ if (batch === 'all') {
   const parts = [];
   for (const name of names) {
     const r = buildBatch(name, no);
-    parts.push('-- ' + name + '\n' + r.sql);
+    parts.push({ name: name, rows: r.nextNo - no, sql: '-- ' + name + '\n' + r.sql });
     no = r.nextNo;
   }
   const seedPath = path.join(__dirname, 'out', 'seed-all.sql');
-  fs.writeFileSync(seedPath, parts.join('\n'));
+  fs.writeFileSync(seedPath, parts.map(p => p.sql).join('\n'));
   console.log('wrote', path.relative(process.cwd(), seedPath), '-', no - 1, 'rows total');
+
+  const fromIdx = process.argv.indexOf('--from');
+  if (fromIdx > 0) {
+    const from = process.argv[fromIdx + 1];
+    const picked = parts.filter(p => p.name >= from);
+    if (picked.length === 0) throw new Error('--from に該当するバッチがありません: ' + from);
+    const addPath = path.join(__dirname, 'out', 'seed-from-' + from + '.sql');
+    fs.writeFileSync(addPath, picked.map(p => p.sql).join('\n'));
+    console.log('wrote', path.relative(process.cwd(), addPath), '-', picked.reduce((s, p) => s + p.rows, 0), 'rows (', picked[0].name, '..', picked[picked.length - 1].name, ')');
+  }
 } else {
   buildBatch(batch, parseInt(process.argv[3] || '1', 10));
 }

@@ -37,7 +37,10 @@ spain_portugal 7 / germany_austria 7 / service_cheese 6 / tasting 4 / law 4(合�
 ## 問題データの生成フロー(tools/)
 1. `tools/input/batch-XXX.json` に問題を記述(`c` 配列の先頭が正答。`r: true` で needs_review)
 2. `node tools/build-batch.js all` で全バッチを連番で SQL 化(`tools/out/seed-all.sql`)
-3. 生成された SQL を Supabase の SQL Editor で実行(追加分だけなら `node tools/build-batch.js batch-013 <開始no>`)
+3. 生成された SQL を Supabase の SQL Editor で実行。投入済みの環境に追加するときは `node tools/build-batch.js all --from batch-NNN` で出力される `seed-from-batch-NNN.sql` だけを実行(question_no は全バッチ通しの連番なので、既存バッチの問題の順序や問題文は変えない)
+4. 投入済みの問題を直すときは `tools/out/fix-NNN-*.sql` に UPDATE 文を置く
+
+投入履歴: batch-001〜012(255問)→ batch-013〜023(209問、計464問)
 
 ## 問題作成ルール
 - 教本や過去問の文章をそのまま転載しない(オリジナルの問題文・解説)

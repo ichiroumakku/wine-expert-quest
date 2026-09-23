@@ -12,7 +12,8 @@ J.S.A. ワインエキスパート一次試験(筆記)対策の学習アプリ�
 
 1. Supabase で新規プロジェクト `wine-expert-quest`(Tokyo / Confirm email OFF)を作成
 2. SQL Editor で [`schema.sql`](schema.sql) を実行
-3. [`tools/out/seed-all.sql`](tools/out/seed-all.sql) を実行して問題(255問)を投入
+3. [`tools/out/seed-all.sql`](tools/out/seed-all.sql) を実行して問題(464問)を投入
+   - 255問を投入済みの環境では、代わりに [`tools/out/seed-from-batch-013.sql`](tools/out/seed-from-batch-013.sql)(追加209問)と [`tools/out/fix-001-zasshu.sql`](tools/out/fix-001-zasshu.sql)(解説の修正)を実行
 4. `index.html` の `__SUPABASE_URL__` / `__SUPABASE_ANON_KEY__` を新プロジェクトの値に置換
 5. `main` へ push すると GitHub Pages に反映
 
