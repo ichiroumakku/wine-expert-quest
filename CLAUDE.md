@@ -13,6 +13,7 @@ UI・コード構成は姉妹プロジェクト aws-saa-quest と同一(コピ�
 - aws-saa-quest のリポジトリ・Supabase には一切書き込まない
 
 ## 技術構成
+- フロントエンド: GitHub Pages(https://ichiroumakku.github.io/wine-expert-quest/)
 - バックエンド: Supabase(新規プロジェクト wine-expert-quest / Tokyo)。URL / anon key は `index.html` 冒頭に直書き
 - 認証: Supabase Auth(メール/パスワード、Confirm email OFF)
 - スキーマ定義は `schema.sql`(aws-saa-quest と同構造 + `questions.needs_review`)
