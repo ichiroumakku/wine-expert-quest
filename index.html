@@ -886,7 +886,7 @@
         </div>
       </div>
       <div class="chart-card">
-        <div class="dashboard-title">日別正答率</div>
+        <div class="dashboard-title">正答率の推移</div>
         <div id="accuracyChartArea"></div>
       </div>
       <div class="dashboard-title">分野別成績(推定得点率は直近${RECENT_WINDOW}問で計算)</div>
@@ -901,7 +901,7 @@
 
   // ---- 日別正答率チャート ----
   let dashboardLogs = [];
-  let chartRange = 'week';   // 'week' = 直近7日間 / 'month' = 直近30日間
+  let chartRange = 'week';   // 'week' = 直近7日間 / 'month' = 直近30日間 / 'year' = 直近12か月(月別)
 
   function setChartRange(range) {
     chartRange = range;
@@ -936,24 +936,52 @@
     }));
   }
 
+  // 表示幅に収まるよう、固定の論理幅で描いて width=100% で縮尺する
+  // 直近 months か月を月ごとに集計(年間表示用)
+  function computeMonthlyAccuracy(logs, months) {
+    const today = new Date();
+    const buckets = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      buckets.push({ key: d.getFullYear() + '-' + d.getMonth(), label: (d.getMonth() + 1) + '月', total: 0, correct: 0 });
+    }
+    const map = {};
+    buckets.forEach(b => { map[b.key] = b; });
+    for (const log of logs) {
+      const t = new Date(log.created_at);
+      const b = map[t.getFullYear() + '-' + t.getMonth()];
+      if (b) {
+        b.total++;
+        if (log.is_correct) b.correct++;
+      }
+    }
+    return buckets.map(b => ({
+      label: b.label,
+      total: b.total,
+      accuracy: b.total > 0 ? Math.round(b.correct / b.total * 1000) / 10 : null
+    }));
+  }
+
   function renderAccuracyChartSvg(buckets) {
     const dense = buckets.length > 14;
-    const barW = dense ? 14 : 32;
-    const gap = dense ? 4 : 8;
+    const w = 320;
+    const padLeft = 26;   // 目盛りラベル(0%/50%/100%)用の余白
+    const slot = (w - padLeft) / buckets.length;
+    const barW = slot * (dense ? 0.7 : 0.6);
+    const gap = slot - barW;
     const chartH = 120;
     const padTop = 16, padBottom = 20;
-    const w = buckets.length * (barW + gap) + gap;
     const h = chartH + padTop + padBottom;
 
     const gridLines = [0, 50, 100].map(pct => {
       const y = padTop + chartH * (1 - pct / 100);
-      return `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#4a2d3a" stroke-width="1" stroke-dasharray="2,3"/>`
-        + `<text x="2" y="${y - 3}" font-size="9" fill="#8a6f7a">${pct}%</text>`;
+      return `<line x1="${padLeft}" y1="${y}" x2="${w}" y2="${y}" stroke="#4a2d3a" stroke-width="1" stroke-dasharray="2,3"/>`
+        + `<text x="0" y="${y + 3}" font-size="9" fill="#8a6f7a">${pct}%</text>`;
     }).join('');
 
     const labelEvery = dense ? 5 : 1;
     const bars = buckets.map((b, i) => {
-      const x = gap + i * (barW + gap);
+      const x = padLeft + i * slot + gap / 2;
       const hasData = b.accuracy !== null;
       const barH = hasData ? Math.max(2, chartH * (b.accuracy / 100)) : 2;
       const y = padTop + chartH - barH;
@@ -969,18 +997,20 @@
       return `<g><title>${escapeHtml(title)}</title><rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3" fill="${color}"/>${valueSvg}${labelSvg}</g>`;
     }).join('');
 
-    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block;">${gridLines}${bars}</svg>`;
+    return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block; height:auto;">${gridLines}${bars}</svg>`;
   }
 
   function renderChartSection() {
     const area = document.getElementById('accuracyChartArea');
     if (!area) return;
-    const days = chartRange === 'month' ? 30 : 7;
-    const buckets = computeDailyAccuracy(dashboardLogs, days);
+    const buckets = chartRange === 'year'
+      ? computeMonthlyAccuracy(dashboardLogs, 12)
+      : computeDailyAccuracy(dashboardLogs, chartRange === 'month' ? 30 : 7);
     area.innerHTML = `
       <div class="chart-tabs">
         <button class="chart-tab${chartRange === 'week' ? ' active' : ''}" onclick="setChartRange('week')">週間</button>
         <button class="chart-tab${chartRange === 'month' ? ' active' : ''}" onclick="setChartRange('month')">月間</button>
+        <button class="chart-tab${chartRange === 'year' ? ' active' : ''}" onclick="setChartRange('year')">年間</button>
       </div>
       <div class="chart-scroll">${renderAccuracyChartSvg(buckets)}</div>
     `;
