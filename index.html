@@ -538,8 +538,8 @@
     spain_portugal: 7, germany_austria: 7, service_cheese: 6, tasting: 4, law: 4
   };
 
-  // 難易度: 1=基礎用語 / 2=産地・品種の対応 / 3=細かい数値・法規
-  const diffLabels = { 1: "基礎用語", 2: "産地・品種", 3: "数値・法規" };
+  // 難易度: 1=基礎 / 2=中間 / 3=本番同等(表示は SAA 版と同じ。作問の目安は 1=基礎用語 / 2=産地・品種の対応 / 3=細かい数値・法規)
+  const diffLabels = { 1: "基礎", 2: "中間", 3: "本番同等" };
   const expTable = {
     1: { correct: 6,  incorrect: 1 },
     2: { correct: 10, incorrect: 2 },
@@ -1106,7 +1106,7 @@
   function questionHeaderHtml(q) {
     const fieldLabel = fieldNames[q.category_id] || q.category_id || "分野未設定";
     const diff = q.difficulty || 2;
-    return `<div class="tag">${fieldLabel}</div><span class="diff-tag diff-${diff}">${diffLabels[diff] || "産地・品種"}</span>`;
+    return `<div class="tag">${fieldLabel}</div><span class="diff-tag diff-${diff}">${diffLabels[diff] || "中間"}</span>`;
   }
 
   function renderQuestion() {
@@ -1251,7 +1251,7 @@
       resultTitle.innerText = "❌ 不正解";
       resultTitle.className = "result-title incorrect-text";
     }
-    expGain.innerText = "+" + expGained + " EXP（" + (diffLabels[difficulty] || "産地・品種") + "）";
+    expGain.innerText = "+" + expGained + " EXP（" + (diffLabels[difficulty] || "中間") + "）";
     explanationText.innerText = q.explanation;
     resultBox.style.display = "block";
     renderDeepDive(q);
